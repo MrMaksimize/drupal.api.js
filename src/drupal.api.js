@@ -42,7 +42,7 @@ drupal.api.prototype.call = function(url, dataType, type, data, callback) {
     dataType: dataType,
     type: type,
     success: function(data, textStatus) {
-      if (textStatus == 'success') {
+      if (textStatus == 'success' || textStatus == 'OK') {
         callback(data);
       }
       else {
