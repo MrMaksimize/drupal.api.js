@@ -51,7 +51,7 @@ drupal.api.prototype.call = function(url, dataType, type, data, callback) {
       }
     },
     error: function(xhr, ajaxOptions, thrownError) {
-      console.log(xhr.responseText);
+      console.log(xhr.statusText);
       callback(null);
     }
   };
