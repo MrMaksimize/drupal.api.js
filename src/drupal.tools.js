@@ -93,23 +93,60 @@ drupal.tools = /*jQuery ||*/ {
     // Return the modified object
     return target;
   },
+  each: function( object, callback, args ) {
+    var name, i = 0,
+      length = object.length,
+      isObj = length === undefined || jQuery.isFunction( object );
+    if ( args ) {
+      if ( isObj ) {
+        for ( name in object ) {
+          if ( callback.apply( object[ name ], args ) === false ) {
+            break;
+          }
+        }
+      } else {
+        for ( ; i < length; ) {
+          if ( callback.apply( object[ i++ ], args ) === false ) {
+            break;
+          }
+        }
+      }
+    // A special, fast, case for the most common use of each
+    } else {
+      if ( isObj ) {
+        for ( name in object ) {
+          if ( callback.call( object[ name ], name, object[ name ] ) === false ) {
+            break;
+          }
+        }
+      } else {
+        for ( ; i < length; ) {
+          if ( callback.call( object[ i ], i, object[ i++ ] ) === false ) {
+            break;
+          }
+        }
+      }
+    }
+    return object;
+  },
+
   param: function(a, traditional) {
     var s = [],
       add = function( key, value ) {
         // If value is a function, invoke it and return its value
-        value = jQuery.isFunction( value ) ? value() : value;
+        value = self.isFunction( value ) ? value() : value;
         s[ s.length ] = encodeURIComponent( key ) + "=" + encodeURIComponent( value );
       };
 
     // Set traditional to true for jQuery <= 1.3.2 behavior.
-    if ( traditional === undefined ) {
+    /*if ( traditional === undefined ) {
       traditional = jQuery.ajaxSettings.traditional;
-    }
+    }*/
 
     // If an array was passed in, assume that it is an array of form elements.
-    if ( jQuery.isArray( a ) || ( a.jquery && !jQuery.isPlainObject( a ) ) ) {
+    if ( self.isArray( a ) || ( a.jquery && !self.isPlainObject( a ) ) ) {
       // Serialize the form elements
-      jQuery.each( a, function() {
+      self.each( a, function() {
         add( this.name, this.value );
       });
 
