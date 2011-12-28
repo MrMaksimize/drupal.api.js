@@ -1,7 +1,7 @@
 // The drupal namespace.
 var drupal = drupal || {};
 
-drupal.tools = jQuery || {
+drupal.tools = /*jQuery ||*/ {
   type: function( obj ) {
     // Populate the class2type map
   var class2type = {};
@@ -220,7 +220,7 @@ drupal.tools = jQuery || {
     x1.onerror = function(){
       request.error(x1, null, null);
     }
-    x1.open(request.type, request.url, true);
+    x1.open(request.type, request.url, false);
     x1.setRequestHeader("Content-type","application/" + request.dataType);
     x1.setRequestHeader("Accept", "application/" + request.dataType);
     if (request['data']){
