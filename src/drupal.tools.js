@@ -2,18 +2,24 @@
 var drupal = drupal || {};
 
 drupal.tools = /*jQuery ||*/ {
+  class2type: {
+    "[object Array]": "array",
+    "[object Boolean]": "boolean",
+    "[object Date]": "date",
+    "[object Function]": "function",
+    "[object Number]": "number",
+    "[object Object]": "object",
+    "[object RegExp]": "regexp",
+    "[object String]": "string"
+  },
   type: function( obj ) {
     // Populate the class2type map
-  var class2type = {};
   var result;
-  drupal.tools.each("Boolean Number String Function Array Date RegExp Object".split(" "), function(i, name) {
-    class2type[ "[object " + name + "]" ] = name.toLowerCase();
-  });
   if (obj == null){
     result = String( obj );
   }
   else{
-    result = class2type[ toString.call(obj) ] || "object";
+    result = drupal.tools.class2type[ toString.call(obj) ] || "object";
   }
   /*return obj == null ?
     String( obj ) :
@@ -25,11 +31,14 @@ drupal.tools = /*jQuery ||*/ {
   isArray: function( obj ) {
     return drupal.tools.type(obj) === "array";
   },
+  isWindow: function( obj ) {
+    return obj && typeof obj === "object" && "setInterval" in obj;
+  },
   isPlainObject: function( obj ) {
     // Must be an Object.
     // Because of IE, we also have to check the presence of the constructor property.
     // Make sure that DOM nodes and window objects don't pass through, as well
-    if ( !obj || jQuery.type(obj) !== "object" || obj.nodeType || jQuery.isWindow( obj ) ) {
+    if ( !obj || drupal.tools.type(obj) !== "object" || obj.nodeType || drupal.tools.isWindow( obj ) ) {
       return false;
     }
     try {
@@ -108,7 +117,7 @@ drupal.tools = /*jQuery ||*/ {
   each: function( object, callback, args ) {
     var name, i = 0,
       length = object.length,
-      isObj = length === undefined || jQuery.isFunction( object );
+      isObj = length === undefined || drupal.tools.isFunction( object );
     if ( args ) {
       if ( isObj ) {
         for ( name in object ) {
@@ -157,7 +166,7 @@ drupal.tools = /*jQuery ||*/ {
         // a server error. Possible fixes are to modify rack's
         // deserialization algorithm or to provide an option or flag
         // to force array serialization to be shallow.
-        drupal.tools.buildParams( prefix + "[" + ( typeof v === "object" || jQuery.isArray(v) ? i : "" ) + "]", v, traditional, add );
+        drupal.tools.buildParams( prefix + "[" + ( typeof v === "object" || drupal.tools.isArray(v) ? i : "" ) + "]", v, traditional, add );
       }
     });
   }
@@ -220,7 +229,7 @@ drupal.tools = /*jQuery ||*/ {
     x1.onerror = function(){
       request.error(x1, null, null);
     }
-    x1.open(request.type, request.url, false);
+    x1.open(request.type, request.url, false); //@todo this sets the async flag
     x1.setRequestHeader("Content-type","application/" + request.dataType);
     x1.setRequestHeader("Accept", "application/" + request.dataType);
     if (request['data']){
