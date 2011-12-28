@@ -499,7 +499,7 @@ drupal.node.prototype.setQuery = function(query, field, value) {
  * @return {object} The object to send to the Services endpoint.
  */
 drupal.node.prototype.getObject = function() {
-  return jQuery.extend(drupal.entity.prototype.getObject.call(this), {
+  return drupal.tools.extend(drupal.entity.prototype.getObject.call(this), {
     title: this.title,
     type: this.type,
     status: this.status,

@@ -8,7 +8,34 @@ drupal.tools = /*jQuery ||*/ {
       class2type[ toString.call(obj) ] || "object";
   },
   isFunction: function(obj) {
-    return drupal.tools.type(obj) === "function";
+    return self.type(obj) === "function";
+  },
+  isArray: Array.isArray || function( obj ) {
+    return self.type(obj) === "array";
+  },
+  isPlainObject: function( obj ) {
+    // Must be an Object.
+    // Because of IE, we also have to check the presence of the constructor property.
+    // Make sure that DOM nodes and window objects don't pass through, as well
+    if ( !obj || jQuery.type(obj) !== "object" || obj.nodeType || jQuery.isWindow( obj ) ) {
+      return false;
+    }
+    try {
+      // Not own constructor property must be Object
+      if ( obj.constructor &&
+        !hasOwn.call(obj, "constructor") &&
+        !hasOwn.call(obj.constructor.prototype, "isPrototypeOf") ) {
+        return false;
+      }
+    } catch ( e ) {
+      // IE8,9 Will throw exceptions on certain host objects #9897
+      return false;
+    }
+    // Own properties are enumerated firstly, so to speed up,
+    // if last one is own, then all properties are own.
+    var key;
+    for ( key in obj ) {}
+    return key === undefined || hasOwn.call( obj, key );
   },
   extend: function() {
     var options, name, src, copy, copyIsArray, clone,
@@ -24,7 +51,7 @@ drupal.tools = /*jQuery ||*/ {
       i = 2;
     }
     // Handle case when target is a string or something (possible in deep copy)
-    if ( typeof target !== "object" && !jQuery.isFunction(target) ) {
+    if ( typeof target !== "object" && !self.isFunction(target) ) {
       target = {};
     }
     // extend jQuery itself if only one argument is passed
@@ -44,16 +71,16 @@ drupal.tools = /*jQuery ||*/ {
             continue;
           }
           // Recurse if we're merging plain objects or arrays
-          if ( deep && copy && ( jQuery.isPlainObject(copy) || (copyIsArray = jQuery.isArray(copy)) ) ) {
+          if ( deep && copy && ( self.isPlainObject(copy) || (copyIsArray = self.isArray(copy)) ) ) {
             if ( copyIsArray ) {
               copyIsArray = false;
-              clone = src && jQuery.isArray(src) ? src : [];
+              clone = src && self.isArray(src) ? src : [];
             }
             else {
-              clone = src && jQuery.isPlainObject(src) ? src : {};
+              clone = src && self.isPlainObject(src) ? src : {};
             }
             // Never move original objects, clone them
-            target[ name ] = jQuery.extend( deep, clone, copy );
+            target[ name ] = self.extend( deep, clone, copy );
 
             // Don't bring in undefined values
           }
