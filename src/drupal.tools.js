@@ -3,15 +3,27 @@ var drupal = drupal || {};
 
 drupal.tools = /*jQuery ||*/ {
   type: function( obj ) {
-    return obj == null ?
-      String( obj ) :
-      class2type[ toString.call(obj) ] || "object";
+    // Populate the class2type map
+  var class2type = {};
+  var result;
+  drupal.tools.each("Boolean Number String Function Array Date RegExp Object".split(" "), function(i, name) {
+    class2type[ "[object " + name + "]" ] = name.toLowerCase();
+  });
+  if (obj == null){
+    result = String( obj );
+  }
+  else{
+    result = class2type[ toString.call(obj) ] || "object";
+  }
+  /*return obj == null ?
+    String( obj ) :
+    class2type[ toString.call(obj) ] || "object";*/
   },
   isFunction: function(obj) {
-    return self.type(obj) === "function";
+    return drupal.tools.type(obj) === "function";
   },
-  isArray: Array.isArray || function( obj ) {
-    return self.type(obj) === "array";
+  isArray: function( obj ) {
+    return drupal.tools.type(obj) === "array";
   },
   isPlainObject: function( obj ) {
     // Must be an Object.
@@ -51,7 +63,7 @@ drupal.tools = /*jQuery ||*/ {
       i = 2;
     }
     // Handle case when target is a string or something (possible in deep copy)
-    if ( typeof target !== "object" && !self.isFunction(target) ) {
+    if ( typeof target !== "object" && !drupal.tools.isFunction(target) ) {
       target = {};
     }
     // extend jQuery itself if only one argument is passed
@@ -71,16 +83,16 @@ drupal.tools = /*jQuery ||*/ {
             continue;
           }
           // Recurse if we're merging plain objects or arrays
-          if ( deep && copy && ( self.isPlainObject(copy) || (copyIsArray = self.isArray(copy)) ) ) {
+          if ( deep && copy && ( drupal.tools.isPlainObject(copy) || (copyIsArray = drupal.tools.isArray(copy)) ) ) {
             if ( copyIsArray ) {
               copyIsArray = false;
-              clone = src && self.isArray(src) ? src : [];
+              clone = src && drupal.tools.isArray(src) ? src : [];
             }
             else {
-              clone = src && self.isPlainObject(src) ? src : {};
+              clone = src && drupal.tools.isPlainObject(src) ? src : {};
             }
             // Never move original objects, clone them
-            target[ name ] = self.extend( deep, clone, copy );
+            target[ name ] = drupal.tools.extend( deep, clone, copy );
 
             // Don't bring in undefined values
           }
@@ -129,12 +141,42 @@ drupal.tools = /*jQuery ||*/ {
     }
     return object;
   },
-
+  buildParams: function( prefix, obj, traditional, add ) {
+  if ( drupal.tools.isArray( obj ) ) {
+    // Serialize array item.
+    drupal.tools.each( obj, function( i, v ) {
+      if ( traditional || rbracket.test( prefix ) ) {
+        // Treat each array item as a scalar.
+        add( prefix, v );
+      }
+      else {
+        // If array item is non-scalar (array or object), encode its
+        // numeric index to resolve deserialization ambiguity issues.
+        // Note that rack (as of 1.0.0) can't currently deserialize
+        // nested arrays properly, and attempting to do so may cause
+        // a server error. Possible fixes are to modify rack's
+        // deserialization algorithm or to provide an option or flag
+        // to force array serialization to be shallow.
+        drupal.tools.buildParams( prefix + "[" + ( typeof v === "object" || jQuery.isArray(v) ? i : "" ) + "]", v, traditional, add );
+      }
+    });
+  }
+  else if ( !traditional && obj != null && typeof obj === "object" ) {
+    // Serialize object item.
+    for ( var name in obj ) {
+      drupal.tools.buildParams( prefix + "[" + name + "]", obj[ name ], traditional, add );
+    }
+  }
+  else {
+    // Serialize scalar item.
+    add( prefix, obj );
+  }
+},
   param: function(a, traditional) {
     var s = [],
       add = function( key, value ) {
         // If value is a function, invoke it and return its value
-        value = self.isFunction( value ) ? value() : value;
+        value = drupal.tools.isFunction( value ) ? value() : value;
         s[ s.length ] = encodeURIComponent( key ) + "=" + encodeURIComponent( value );
       };
 
@@ -144,29 +186,27 @@ drupal.tools = /*jQuery ||*/ {
     }*/
 
     // If an array was passed in, assume that it is an array of form elements.
-    if ( self.isArray( a ) || ( a.jquery && !self.isPlainObject( a ) ) ) {
+    if ( drupal.tools.isArray( a ) || ( a.jquery && !drupal.tools.isPlainObject( a ) ) ) {
       // Serialize the form elements
-      self.each( a, function() {
-        add( this.name, this.value );
+      drupal.tools.each( a, function() {
+        add( drupal.tools.name, drupal.tools.value );
       });
 
     } else {
       // If traditional, encode the "old" way (the way 1.3.2 or older
       // did it), otherwise encode params recursively.
       for ( var prefix in a ) {
-        buildParams( prefix, a[ prefix ], traditional, add );
+        drupal.tools.buildParams( prefix, a[ prefix ], traditional, add );
       }
     }
 
     // Return the resulting serialization
+    var r20 = /%20/g;
     return s.join( "&" ).replace( r20, "+" );
   },
   ajax: function(request) {
-    console.log(request);
     //initialize request object
     x1 = new XMLHttpRequest();
-    console.log(x1);
-    //x1.responseType = request.dataType;
     x1.onreadystatechange = function(){
       if (x1.readyState == 4){
         request.success(JSON.parse(x1.responseText), x1.statusText);

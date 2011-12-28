@@ -73,7 +73,7 @@ drupal.api.prototype.call = function(url, dataType, type, data, callback) {
 drupal.api.prototype.get = function(object, query, callback) {
   var url = this.getURL(object);
   url += '.jsonp';
-  url += query ? ('?' + decodeURIComponent(jQuery.param(query, true))) : '';
+  url += query ? ('?' + decodeURIComponent(drupal.tools.param(query, true))) : '';
   this.call(url, 'jsonp', 'GET', null, callback);
 };
 
@@ -88,7 +88,7 @@ drupal.api.prototype.get = function(object, query, callback) {
 drupal.api.prototype.getItems = function(object, type, query, callback) {
   var url = this.getURL(object) + '/' + type;
   url += '.jsonp';
-  url += query ? ('?' + decodeURIComponent(jQuery.param(query, true))) : '';
+  url += query ? ('?' + decodeURIComponent(drupal.tools.param(query, true))) : '';
   this.call(url, 'jsonp', 'GET', null, callback);
 };
 
